@@ -15,6 +15,8 @@ def create_app(environment: str = 'DEV', pool_size:int=10):
     app=Flask(__name__)
     app.config['SECRET_KEY']='my_chemical_romance'
     context=app.app_context()
+
+
     with context:
 
         if environment:
@@ -46,10 +48,14 @@ def create_app(environment: str = 'DEV', pool_size:int=10):
 
         from app.info import info as info_blueprint
         app.register_blueprint(info_blueprint)
+
     db.init_app(app)
     context.push()
-    db.create_all()
+    app.db=db
+    from . import models
+    db.create_all(app=app)
     db.session.commit()
+
     return app
 
 
