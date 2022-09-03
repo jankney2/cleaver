@@ -5,8 +5,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_session import Session
 from . import models
+from config_vars import database_creds
 
 
+db=SQLAlchemy()
 
 def page_not_found_handler():
     return 'Page not found dumbass'
@@ -14,7 +16,8 @@ def page_not_found_handler():
 def server_error_handler():
     return 'yo we had a problem with our server. working on that!'
 
-def create_app(environment: str = None):
+
+def create_app(environment: str = 'DEV', pool_size:int=10):
     app=Flask(__name__)
     app.config['SECRET_KEY']='my_chemical_romance'
 
@@ -25,12 +28,23 @@ def create_app(environment: str = None):
 
     # database config
     db = SQLAlchemy(app)
-
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     if app_env=='PROD':
+        # need this
         app.config['SQLALCHEMY_DATABSE_URI'] = 'sqlite:///db.sqlite'
     if app_env=='DEV':
-        app.config['SQLALCHEMY_DATABSE_URI']='localhost:'
+        url = f'postgresql://{database_creds.get("pguser")}:{database_creds["pgpassword"]}@{database_creds["pghost"]}:{database_creds["pgport"]}/{database_creds["pgdb"]}'
+        app.config['SQLALCHEMY_DATABASE_URI']=url
 
+            # f'postgresql://{os.environ.get("POSTGRES_USER")}:' \
+            #                                 f'{os.environ.get("POSTGRES_PASSWORD")}@localhost/' \
+            #                                 f'{os.environ.get("POSTGRES_DB")}'
+
+    # if pool_size:
+        # app.config['SQLALCHEMY_POOL_SIZE']=pool_size
+
+
+    db.init_app(app)
     db.create_all()
     #     register blueprints
     app.register_error_handler(404, page_not_found_handler)
@@ -40,6 +54,9 @@ def create_app(environment: str = None):
     app.register_blueprint(info_blueprint)
 
     return app
+
+
+
 
 
 
