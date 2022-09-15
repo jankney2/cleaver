@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 import os
 from flask_sqlalchemy import SQLAlchemy
 from config_vars import database_creds
@@ -17,6 +17,7 @@ def create_app(environment: str = 'DEV', pool_size:int=10):
     context=app.app_context()
 
 
+
     with context:
 
         if environment:
@@ -26,6 +27,7 @@ def create_app(environment: str = 'DEV', pool_size:int=10):
 
         # database config
         if app_env == 'PROD':
+            pass
             # need this
             app.config['SQLALCHEMY_DATABSE_URI'] = 'sqlite:///db.sqlite'
         if app_env == 'DEV':
@@ -46,6 +48,8 @@ def create_app(environment: str = 'DEV', pool_size:int=10):
         app.register_error_handler(404, page_not_found_handler)
         app.register_error_handler(500, server_error_handler)
 
+        from app.publicViews import public_views as public_views_blueprint
+        app.register_blueprint(public_views_blueprint)
         from app.info import info as info_blueprint
         app.register_blueprint(info_blueprint)
 
